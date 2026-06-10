@@ -1,7 +1,7 @@
 import xmlrpc.client
 
 SERVER_IP = '192.168.1.100'
-SERVER_PORT = 5001
+SERVER_PORT = 50051
 
 try:
     proxy = xmlrpc.client.ServerProxy(f"http://{SERVER_IP}:{SERVER_PORT}")
