@@ -1,6 +1,16 @@
 import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk
+import xmlrpc.client  # <-- NAZIRA'S INTEGRATION: Import RPC library
+
+# ---------------- RPC CLIENT SETUP ----------------
+# Connects to Ghaida's server. 
+# Change "localhost" to her local IP address if running on different laptops.
+SERVER_URL = "http://localhost:8000/"
+try:
+    rpc_server = xmlrpc.client.ServerProxy(SERVER_URL)
+except Exception as e:
+    print(f"RPC initialization error: {e}")
 
 # ---------------- MAIN WINDOW ----------------
 window = tk.Tk()
@@ -49,7 +59,7 @@ password_entry = tk.Entry(frame, show="*", width=30)
 password_entry.pack(pady=5)
 
 # ---------------- DASHBOARD ----------------
-def open_dashboard():
+def open_dashboard(student_id):
     dashboard = tk.Toplevel()
     dashboard.title("Student Dashboard")
     dashboard.geometry("500x400")
@@ -65,33 +75,44 @@ def open_dashboard():
         bg="white"
     ).pack(pady=10)
 
-    # FAKE COURSE DATA
-    courses = [
-        "CND4400 - Distributed Systems",
-        "CSC3050 - Database Systems",
-        "CSC3100 - Artificial Intelligence",
-        "CSC3020 - Networking"
-    ]
-
     listbox = tk.Listbox(frame2, width=40, height=6)
     listbox.pack(pady=10)
 
-    for c in courses:
-        listbox.insert(tk.END, c)
+    # --- NAZIRA'S INTEGRATION: Fetch courses dynamically from Ghaida's RPC server ---
+    try:
+        courses = rpc_server.ViewCourse()
+        for c in courses:
+            listbox.insert(tk.END, c)
+    except Exception as e:
+        messagebox.showerror("RPC Error", "Could not load course list from server.")
+        # Fallback to local fake data if server isn't running yet during test
+        courses = ["CND4400 - Distributed Systems", "CSC3050 - Database Systems"]
+        for c in courses:
+            listbox.insert(tk.END, c)
 
-    # REGISTER
+    # --- NAZIRA'S INTEGRATION: RPC Register Function ---
     def register():
         selected = listbox.get(tk.ACTIVE)
         if selected:
-            messagebox.showinfo("Success", f"Registered: {selected}")
+            try:
+                # Triggers RPC to register and updates MongoDB
+                status = rpc_server.RegisterCourse(selected, student_id)
+                messagebox.showinfo("RPC Server Response", status)
+            except Exception as e:
+                messagebox.showerror("RPC Network Error", f"Failed to send register command: {e}")
         else:
             messagebox.showerror("Error", "Please select a course")
 
-    # DROP
+    # --- NAZIRA'S INTEGRATION: RPC Drop Function ---
     def drop():
         selected = listbox.get(tk.ACTIVE)
         if selected:
-            messagebox.showinfo("Success", f"Dropped: {selected}")
+            try:
+                # Triggers RPC to drop and updates MongoDB
+                status = rpc_server.DropCourse(selected, student_id)
+                messagebox.showinfo("RPC Server Response", status)
+            except Exception as e:
+                messagebox.showerror("RPC Network Error", f"Failed to send drop command: {e}")
         else:
             messagebox.showerror("Error", "Please select a course")
 
@@ -100,18 +121,26 @@ def open_dashboard():
 
 # ---------------- LOGIN FUNCTION ----------------
 def login():
-    username = username_entry.get()
-    password = password_entry.get()
+    username = username_entry.get().strip()
+    password = password_entry.get().strip()
 
     if username == "" or password == "":
         messagebox.showerror("Error", "Please fill all fields")
+        return
 
-    elif username == "student" and password == "1234":
-        messagebox.showinfo("Success", "Login Successful")
-        open_dashboard()
-
-    else:
-        messagebox.showerror("Error", "Invalid Username or Password")
+    # --- NAZIRA'S INTEGRATION: Verify password with Ghaida's server over RPC ---
+    try:
+        is_authenticated = rpc_server.verify_login(username, password)
+        
+        if is_authenticated:
+            messagebox.showinfo("Success", "Login Successful via RPC")
+            window.withdraw() # Hide the login window
+            open_dashboard(username) # Launch dashboard and pass student ID
+        else:
+            messagebox.showerror("Error", "Invalid Username or Password")
+            
+    except Exception as e:
+        messagebox.showerror("RPC Connection Error", f"Cannot connect to Server.\nEnsure Ghaida's script is running!\nDetails: {e}")
 
 # ---------------- LOGIN BUTTON ----------------
 tk.Button(
