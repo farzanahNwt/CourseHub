@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DCRS Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="logo">🎓 DCRS</div>
+
+    <a class="{{ 'active' if page=='dashboard' else '' }}" href="/dashboard">Dashboard</a>
+    <a class="{{ 'active' if page=='browse' else '' }}" href="/browse">Browse Courses</a>
+    <a class="{{ 'active' if page=='registrations' else '' }}" href="/registrations">My Registrations</a>
+    <a class="{{ 'active' if page=='schedule' else '' }}" href="/schedule">My Schedule</a>
+    <a class="{{ 'active' if page=='notifications' else '' }}" href="/notifications">Notifications</a>
+    <a class="{{ 'active' if page=='profile' else '' }}" href="/profile">Profile</a>
+    <a href="/logout">Logout</a>
+
+    <div class="server-status">
+        🟢 Connected<br>
+        <small>Server: RPC Node-1</small>
+    </div>
+</div>
+
+<div class="main">
+
+    <div class="topbar">
+        <h2>DISTRIBUTED COURSE REGISTRATION SYSTEM</h2>
+        <div class="user">
+            👤 {{ session['name'] }}<br>
+            <small>Student</small>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="message">{{ messages[0] }}</div>
+        {% endif %}
+    {% endwith %}
+
+    {% if page == 'dashboard' %}
+    <h1>Dashboard</h1>
+    <p class="welcome">Welcome back, {{ session['name'] }}!</p>
+
+    <div class="cards">
+        <div class="card"><h2>{{ my_courses|length }}</h2><p>Courses Registered</p></div>
+        <div class="card green"><h2>RPC</h2><p>Server Connected</p></div>
+        <div class="card orange"><h2>{{ courses|length }}</h2><p>Available Courses</p></div>
+        <div class="card purple"><h2>21</h2><p>Maximum Credit Limit</p></div>
+    </div>
+
+    <div class="content-grid">
+        <div class="panel large">
+            <h3>Registered Courses</h3>
+            <table>
+                <tr>
+                    <th>Course Code</th>
+                    <th>Course Name</th>
+                    <th>Credits</th>
+                    <th>Schedule</th>
+                    <th>Venue</th>
+                    <th>Status</th>
+                </tr>
+                {% for course in my_courses %}
+                <tr>
+                    <td>{{ course['course_code'] }}</td>
+                    <td>{{ course['course_title'] }}</td>
+                    <td>{{ course['credits'] }}</td>
+                    <td>{{ course['day'] }}<br>{{ course['start_time'] }} - {{ course['end_time'] }}</td>
+                    <td>{{ course['venue'] }}</td>
+                    <td><span class="registered">Registered</span></td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <div class="panel">
+            <h3>System Status</h3>
+            <div class="status-row"><span>Flask Client</span><b>Online</b></div>
+            <div class="status-row"><span>RPC Server</span><b>Online</b></div>
+            <div class="status-row"><span>MySQL Database</span><b>Online</b></div>
+        </div>
+    </div>
+    {% endif %}
+
+
+    {% if page == 'browse' %}
+    <h1>Browse Courses</h1>
+    <p class="welcome">Select courses based on seat availability, schedule, credits and venue.</p>
+
+    <div class="panel">
+        <table>
+            <tr>
+                <th>Course Code</th>
+                <th>Course Name</th>
+                <th>Credits</th>
+                <th>Lecturer</th>
+                <th>Schedule</th>
+                <th>Venue</th>
+                <th>Available Seats</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+
+            {% for course in courses %}
+            <tr>
+                <td>{{ course['course_code'] }}</td>
+                <td>{{ course['course_title'] }}</td>
+                <td>{{ course['credits'] }}</td>
+                <td>{{ course['lecturer'] }}</td>
+                <td>{{ course['day'] }}<br>{{ course['start_time'] }} - {{ course['end_time'] }}</td>
+                <td>{{ course['venue'] }}</td>
+                <td>{{ course['available_seats'] }}</td>
+
+                <td>
+                    {% if course['available_seats'] > 0 %}
+                        <span class="available">Available</span>
+                    {% else %}
+                        <span class="full">Full</span>
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if course['available_seats'] > 0 %}
+                        <a class="btn" href="/register/{{ course['course_id'] }}">Add</a>
+                    {% else %}
+                        <span class="btn-full">Full</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    {% endif %}
+
+
+    {% if page == 'registrations' %}
+    <h1>My Registrations</h1>
+    <p class="welcome">Courses that you have successfully registered.</p>
+
+    <div class="panel">
+        <table>
+            <tr>
+                <th>Course Code</th>
+                <th>Course Name</th>
+                <th>Credits</th>
+                <th>Schedule</th>
+                <th>Venue</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+
+            {% for course in my_courses %}
+            <tr>
+                <td>{{ course['course_code'] }}</td>
+                <td>{{ course['course_title'] }}</td>
+                <td>{{ course['credits'] }}</td>
+                <td>{{ course['day'] }}<br>{{ course['start_time'] }} - {{ course['end_time'] }}</td>
+                <td>{{ course['venue'] }}</td>
+                <td><span class="registered">Registered</span></td>
+                <td><a class="drop" href="/drop/{{ course['course_id'] }}">Drop</a></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    {% endif %}
+
+
+    {% if page == 'schedule' %}
+    <h1>My Schedule</h1>
+    <p class="welcome">Your timetable is automatically generated from registered courses.</p>
+
+    <div class="panel">
+        <table>
+            <tr>
+                <th>Day</th>
+                <th>Time</th>
+                <th>Course Code</th>
+                <th>Course Name</th>
+                <th>Lecturer</th>
+                <th>Venue</th>
+            </tr>
+
+            {% for course in my_courses %}
+            <tr>
+                <td>{{ course['day'] }}</td>
+                <td>{{ course['start_time'] }} - {{ course['end_time'] }}</td>
+                <td>{{ course['course_code'] }}</td>
+                <td>{{ course['course_title'] }}</td>
+                <td>{{ course['lecturer'] }}</td>
+                <td>{{ course['venue'] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    {% endif %}
+
+
+    {% if page == 'notifications' %}
+    <h1>Notifications</h1>
+    <div class="panel">
+        <div class="notice green-dot">Registration data is transmitted from Flask client to RPC server using XML-RPC.</div>
+        <div class="notice blue-dot">Course seat availability is updated in real time through MySQL.</div>
+        <div class="notice yellow-dot">The system prevents duplicate registration, full-course registration and timetable clash.</div>
+        <div class="notice blue-dot">Students can view their timetable after registration.</div>
+    </div>
+    {% endif %}
+
+
+    {% if page == 'profile' %}
+    <h1>Profile</h1>
+    <div class="panel profile-box">
+        <p><b>Name:</b> {{ session['name'] }}</p>
+        <p><b>Email:</b> {{ session['email'] }}</p>
+        <p><b>Role:</b> Student</p>
+        <p><b>System:</b> Distributed Course Registration System</p>
+    </div>
+    {% endif %}
+
+</div>
+
+</body>
+</html>

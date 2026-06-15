@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DCRS Login</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="login-page">
+
+<div class="login-container">
+    <div class="login-left">
+        <h1>🎓 DCRS</h1>
+        <h2>Distributed Course Registration System</h2>
+        <p>
+            Register courses through a distributed system using Flask,
+            XML-RPC, and MySQL.
+        </p>
+
+        <div class="login-status">
+            🟢 RPC Server Ready<br>
+            🟢 MySQL Database Connected<br>
+            🟢 Flask Client Active
+        </div>
+    </div>
+
+    <div class="login-card">
+        <h2>Student Login</h2>
+        <p class="login-subtitle">Access your course registration dashboard</p>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="message error">{{ messages[0] }}</div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <label>Username</label>
+            <input type="text" name="username" placeholder="Enter username" required>
+
+            <label>Password</label>
+            <input type="password" name="password" placeholder="Enter password" required>
+
+            <button type="submit" class="login-btn">Login</button>
+        </form>
+
+        <p class="demo-login">
+            Demo: student1 / 1234
+        </p>
+    </div>
+</div>
+
+</body>
+</html>
