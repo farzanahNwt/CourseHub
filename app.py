@@ -5,7 +5,7 @@ from database import get_connection
 app = Flask(__name__)
 app.secret_key = "coursehub_secret_key"
 
-rpc_server = xmlrpc.client.ServerProxy("http://127.0.0.1:8000/", allow_none=True)
+rpc_server = xmlrpc.client.ServerProxy("http://192.168.56.1:8000/", allow_none=True)
 
 
 @app.route("/", methods=["GET", "POST"])

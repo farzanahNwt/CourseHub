@@ -1,7 +1,7 @@
 from xmlrpc.server import SimpleXMLRPCServer
 from database import get_connection
 
-HOST = "127.0.0.1"
+HOST = "0.0.0.0"
 PORT = 8000
 MAX_CREDITS = 21
 
