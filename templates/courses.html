@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>All Courses</title>
+</head>
+<body>
+<div class="sidebar">
+    <h2>DCRS</h2>
+    <a href="/student">Dashboard</a>
+    <a class="active" href="/courses">Courses</a>
+    <a href="/logout">Logout</a>
+</div>
+<div class="main">
+    <h2>All System Courses</h2>
+    <div class="grid">
+        {% for c in courses %}
+        <div class="card">
+            <h3>{{ c.course_code }}</h3>
+            <h2>{{ c.course_title }}</h2>
+            <p style="margin-top:15px; color:#475569; line-height: 1.6;">
+                <b>Hours:</b> <span style="color:#0369a1; font-weight:600;">{{ c.credit_hours }} Hours</span> <br>
+                <b>Schedule:</b> {{ c.day }} | {{ c.start_time }} - {{ c.end_time }} <br>
+                <b>Venue:</b> {{ c.venue }}
+            </p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+</body>
+</html>
