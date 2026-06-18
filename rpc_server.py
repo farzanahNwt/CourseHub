@@ -14,6 +14,7 @@ def get_db():
         database="coursehub_database"
     )
 
+
 # ---------- Safe Converter ----------
 def safe(row):
     if not row:

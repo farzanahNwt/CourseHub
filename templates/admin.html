@@ -5,54 +5,151 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <title>DCRS — Admin Dashboard</title>
+    <style>
+        .main-content {
+            margin-left: 280px;
+            padding: 40px 60px;
+            min-height: 100vh;
+            max-width: 1200px;
+        }
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+            .sidebar {
+                width: 100%;
+                position: relative;
+                height: auto;
+            }
+        }
+    </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <div class="sidebar-brand">🌌 <span>DCRS</span> Admin</div>
+    <div class="sidebar-brand">🌌 <span>DCRS Admin</span></div>
     <div class="nav-menu">
-        <a href="#" class="nav-link active" onclick="showPage('dashboard', this)"> Dashboard</a>
-        <a href="#" class="nav-link" onclick="showPage('manage', this)"> Manage Courses</a>
-        <a href="#" class="nav-link" onclick="showPage('add-course', this)"> Add New Course</a>
+        <a href="#" class="nav-link active" onclick="showPage('dashboard', this)"> Dashboard Overview</a>
+        <a href="#" class="nav-link" onclick="showPage('manage', this)"> Course Management</a>
+        <a href="#" class="nav-link" onclick="showPage('add-course', this)"> Course Deployment</a>
         <a href="#" class="nav-link" onclick="showPage('registrations', this)"> Enrollment Records</a>
-        <a href="#" class="nav-link" onclick="showPage('students', this)"> Students List</a>
+        <a href="#" class="nav-link" onclick="showPage('students', this)"> Student Registry</a>
     </div>
     <a href="/logout" class="btn-danger" style="text-align:center; margin-top:auto; padding:12px;"> Log Out</a>
 </div>
 
 <div class="main-content">
 
-    <!-- Dashboard -->
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}" style="margin-bottom: 20px; padding: 12px 20px; border-radius: var(--radius-md); font-weight: 500;
+            {% if category == 'success' %}background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.2);
+            {% elif category == 'danger' %}background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.2);
+            {% elif category == 'warning' %}background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.2);
+            {% else %}background: rgba(6,182,212,0.15); color: #06b6d4; border: 1px solid rgba(6,182,212,0.2);{% endif %}">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endwith %}
+
+    <!-- DASHBOARD -->
     <div id="dashboard" class="page-section">
         <div class="page-header">
             <h1 class="page-title">⚙️ Admin Dashboard</h1>
-            <p class="page-subtitle">System overview and statistics.</p>
+            <p class="page-subtitle">University system overview and distributed service status.</p>
         </div>
+
         <div class="grid">
-            <div class="card"><h3> Total Courses</h3><h2>{{ courses|length }}</h2></div>
-            <div class="card"><h3> Enrollments</h3><h2>{{ registrations|length }}</h2></div>
-            <div class="card"><h3> System Latency</h3><h2 style="font-size:24px; -webkit-text-fill-color: var(--accent-cyan);">0.4ms</h2></div>
-            <div class="card"><h3>🟢 System Status</h3><h2 style="font-size:20px; -webkit-text-fill-color: var(--accent-green);">● Operational</h2></div>
+            <div class="card">
+                <h3> Total Modules</h3>
+                <h2>{{ courses|length }}</h2>
+            </div>
+            <div class="card">
+                <h3> Active Enrollments</h3>
+                <h2>{{ registrations|length }}</h2>
+            </div>
+            <div class="card">
+                <h3>⚡ System Response Time</h3>
+                <h2 style="font-size:24px; -webkit-text-fill-color: var(--accent-cyan);">0.4ms</h2>
+            </div>
+            <div class="card">
+                <h3> Infrastructure Status</h3>
+                <h2 style="font-size:20px; -webkit-text-fill-color: var(--accent-green);"> Operational</h2>
+            </div>
         </div>
-        <div style="background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 24px;">
-            <h3> Quick Stats</h3>
+
+        <!-- SYSTEM INSIGHTS -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 24px; margin-top: 20px;">
+            <h3> System Insights</h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-top: 12px;">
-                <div><span style="color: var(--text-muted);">Total Courses</span><br><b style="font-size:20px;">{{ courses|length }}</b></div>
-                <div><span style="color: var(--text-muted);">Total Enrollments</span><br><b style="font-size:20px; color:var(--accent-cyan);">{{ registrations|length }}</b></div>
-                <div><span style="color: var(--text-muted);">System Status</span><br><b style="font-size:20px; color:var(--accent-green);">● Online</b></div>
+                <div>
+                    <span style="color: var(--text-muted);">Course Catalog Size</span><br>
+                    <b style="font-size:20px;">{{ courses|length }}</b>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted);">Active Enrollments</span><br>
+                    <b style="font-size:20px; color:var(--accent-cyan);">{{ registrations|length }}</b>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted);">Total Students</span><br>
+                    <b style="font-size:20px; color:var(--accent-green);">5</b>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted);">System Health</span><br>
+                    <b style="font-size:20px; color:var(--accent-green);"> Stable</b>
+                </div>
+            </div>
+        </div>
+
+        <!-- RECENT ACTIVITY -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 24px; margin-top: 20px;">
+            <h3> Recent Activity</h3>
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px;">
+                <div style="display: flex; align-items: center; gap: 14px; padding: 12px 16px; background: rgba(255,255,255,0.02); border-radius: var(--radius-sm); border-left: 3px solid var(--accent-green);">
+                    <span style="font-size: 18px;">⚡</span>
+                    <div>
+                        <div style="color: var(--text-primary); font-weight: 500; font-size: 14px;">System started successfully</div>
+                        <div style="color: var(--text-muted); font-size: 12px;">Today, 08:00 AM</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 14px; padding: 12px 16px; background: rgba(255,255,255,0.02); border-radius: var(--radius-sm); border-left: 3px solid var(--accent-cyan);">
+                    <span style="font-size: 18px;">✅</span>
+                    <div>
+                        <div style="color: var(--text-primary); font-weight: 500; font-size: 14px;">New course added: SWW3001 - Software Engineering</div>
+                        <div style="color: var(--text-muted); font-size: 12px;">Today, 09:30 AM</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 14px; padding: 12px 16px; background: rgba(255,255,255,0.02); border-radius: var(--radius-sm); border-left: 3px solid var(--accent-purple);">
+                    <span style="font-size: 18px;">📋</span>
+                    <div>
+                        <div style="color: var(--text-primary); font-weight: 500; font-size: 14px;">2 new enrollments today</div>
+                        <div style="color: var(--text-muted); font-size: 12px;">Today, 10:15 AM</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Manage Courses -->
+    <!-- COURSE MANAGEMENT -->
     <div id="manage" class="page-section" style="display:none;">
         <div class="page-header">
-            <h1 class="page-title"> Manage Courses</h1>
-            <p class="page-subtitle">View and manage all courses.</p>
+            <h1 class="page-title"> Course Management</h1>
+            <p class="page-subtitle">Manage academic modules and availability.</p>
         </div>
+
         <div class="table-container">
             <table>
-                <tr><th>Code</th><th>Course</th><th>Seats</th><th>Day</th><th>Time</th><th>Venue</th><th>Action</th></tr>
+                <tr>
+                    <th>Code</th>
+                    <th>Course Title</th>
+                    <th>Seats</th>
+                    <th>Day</th>
+                    <th>Time</th>
+                    <th>Venue</th>
+                    <th>Action</th>
+                </tr>
                 {% for c in courses %}
                 <tr>
                     <td><span class="badge badge-cyan">{{ c.course_code }}</span></td>
@@ -61,19 +158,20 @@
                     <td><span class="badge badge-purple">{{ c.day }}</span></td>
                     <td>{{ c.start_time }} - {{ c.end_time }}</td>
                     <td><code>{{ c.venue }}</code></td>
-                    <td><a href="/admin/delete/{{ c.course_id }}" class="btn-drop"> Delete</a></td>
+                    <td><a href="/admin/delete/{{ c.course_id }}" class="btn-drop" onclick="return confirm('Are you sure you want to delete this course?')"> Delete</a></td>
                 </tr>
                 {% endfor %}
             </table>
         </div>
     </div>
 
-    <!-- Add Course -->
+    <!-- ADD COURSE -->
     <div id="add-course" class="page-section" style="display:none;">
         <div class="page-header">
-            <h1 class="page-title">➕ Add New Course</h1>
-            <p class="page-subtitle">Create and deploy a new course.</p>
+            <h1 class="page-title">➕ Module Deployment</h1>
+            <p class="page-subtitle">Deploy new academic modules into the system.</p>
         </div>
+
         <div class="table-container" style="max-width: 650px; margin: 0 auto;">
             <form method="POST" action="/admin/add" style="padding: 24px;">
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
@@ -92,20 +190,26 @@
                     <div class="form-group"><label> Venue</label><input name="venue" placeholder="Lab 4" required></div>
                     <div class="form-group"><label> Seats</label><input name="seats" type="number" placeholder="30" required></div>
                 </div>
-                <button class="btn-primary" style="width:100%; padding:14px; margin-top:10px;">🚀 Add Course</button>
+                <button class="btn-primary" style="width:100%; padding:14px; margin-top:10px;"> Add Course</button>
             </form>
         </div>
     </div>
 
-    <!-- Enrollment Records -->
+    <!-- ENROLLMENT LOG -->
     <div id="registrations" class="page-section" style="display:none;">
         <div class="page-header">
-            <h1 class="page-title"> Enrollment Records</h1>
-            <p class="page-subtitle">All student enrollments.</p>
+            <h1 class="page-title"> Enrollment Audit Log</h1>
+            <p class="page-subtitle">All student module registrations.</p>
         </div>
+
         <div class="table-container">
             <table>
-                <tr><th>Course Code</th><th>Course</th><th>Student Name</th><th>Student ID</th></tr>
+                <tr>
+                    <th>Course Code</th>
+                    <th>Course Title</th>
+                    <th>Student Name</th>
+                    <th>Student ID</th>
+                </tr>
                 {% for r in registrations %}
                 <tr>
                     <td><span class="badge badge-cyan">{{ r.course_code }}</span></td>
@@ -120,15 +224,21 @@
         </div>
     </div>
 
-    <!-- Students List -->
+    <!-- STUDENT REGISTRY -->
     <div id="students" class="page-section" style="display:none;">
         <div class="page-header">
-            <h1 class="page-title"> Students List</h1>
-            <p class="page-subtitle">All registered students.</p>
+            <h1 class="page-title"> Student Registry</h1>
+            <p class="page-subtitle">Registered users in the system.</p>
         </div>
+
         <div class="table-container">
             <table>
-                <tr><th>Student ID</th><th>Name</th><th>Username</th><th>Email</th></tr>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                </tr>
                 <tr><td>#1</td><td>Demo Student</td><td>student1</td><td>student@univ.edu</td></tr>
                 <tr><td>#2</td><td>Nazira</td><td>nazira</td><td>nazira@univ.edu</td></tr>
                 <tr><td>#3</td><td>Ali Ahmad</td><td>ali</td><td>ali@univ.edu</td></tr>

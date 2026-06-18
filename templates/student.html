@@ -9,36 +9,65 @@
 <body>
 
 <div class="sidebar">
-    <div class="sidebar-brand">🌌 <span>DCRS</span> Core</div>
+    <div class="sidebar-brand">🌌 <span>DCRS Student Portal</span></div>
     <div class="nav-menu">
-        <a href="#" class="nav-link active" onclick="showPage('dashboard', this)"> Dashboard</a>
+        <a href="#" class="nav-link active" onclick="showPage('dashboard', this)"> Student Dashboard</a>
         <a href="#" class="nav-link" onclick="showPage('registration', this)"> Available Courses</a>
         <a href="#" class="nav-link" onclick="showPage('my-courses', this)"> My Courses</a>
         <a href="#" class="nav-link" onclick="showPage('timetable', this)"> My Schedule</a>
-        <a href="#" class="nav-link" onclick="showPage('profile', this)"> Profile</a>
+        <a href="#" class="nav-link" onclick="showPage('profile', this)"> Student Profile</a>
         <a href="#" class="nav-link" onclick="showPage('report', this)"> Registration Report</a>
     </div>
     <a href="/logout" class="btn-danger" style="text-align:center; margin-top:auto; padding:12px;"> Log Out</a>
 </div>
 
 <div class="main-content">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}" style="margin-bottom: 20px; padding: 12px 20px; border-radius: var(--radius-md); font-weight: 500;
+            {% if category == 'success' %}background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.2);
+            {% elif category == 'danger' %}background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.2);
+            {% elif category == 'warning' %}background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.2);
+            {% else %}background: rgba(6,182,212,0.15); color: #06b6d4; border: 1px solid rgba(6,182,212,0.2);{% endif %}">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endwith %}
 
     <!-- Dashboard -->
     <div id="dashboard" class="page-section">
         <div class="page-header">
             <h1 class="page-title">Welcome, {{ name }}</h1>
-            <p class="page-subtitle">System Status: <span style="color: var(--accent-green);">● Online</span></p>
+            <p class="page-subtitle">System status: <span style="color: var(--accent-green);">● Online</span></p>
         </div>
         <div class="grid">
-            <div class="card"><h3> My Courses</h3><h2>{{ my_courses|length }}</h2></div>
-            <div class="card"><h3> Available</h3><h2>{{ courses|length }}</h2></div>
-            <div class="card"><h3> Total Credits</h3><h2>{{ total_hours }} <span style="font-size:16px; color:var(--text-muted);">CH</span></h2></div>
-            <div class="card"><h3>🟢 Status</h3><h2 style="font-size:20px; -webkit-text-fill-color: var(--accent-green);">● Connected</h2></div>
+            <div class="card"><h3>📋 Enrolled Courses</h3><h2>{{ my_courses|length }}</h2></div>
+            <div class="card"><h3>📚 Available Courses</h3><h2>{{ courses|length }}</h2></div>
+            <div class="card"><h3>📖 Total Credits</h3><h2>{{ total_hours }}/21 <span style="font-size:16px; color:var(--text-muted);">CH</span></h2></div>
+            <div class="card"><h3>🟢 System Status</h3><h2 style="font-size:20px; -webkit-text-fill-color: var(--accent-green);">● Connected</h2></div>
         </div>
+
+        <!-- ⚠ CREDIT WARNING (FIXED POSITION) -->
+
+        {% if credit_warning %}
+        <div style="
+        margin-top: 15px;
+        padding: 12px;
+        border-radius: 8px;
+        background: rgba(255, 0, 0, 0.08);
+        border: 1px solid red;
+        color: red;
+        font-weight: bold;
+    ">
+            {{ credit_warning }}
+        </div>
+        {% endif %}
+
         <div class="table-container">
             <h3 style="padding: 20px 20px 0;"> My Recent Courses</h3>
             <table>
-                <tr><th>Code</th><th>Course</th><th>Venue</th><th>Day</th><th>Time</th></tr>
+                <tr><th>Course Code</th><th>Course Title</th><th>Location</th><th>Day</th><th>Time</th></tr>
                 {% for m in my_courses[:3] %}
                 <tr>
                     <td><span class="badge badge-cyan">{{ m.course_code }}</span></td>
@@ -54,6 +83,7 @@
         </div>
     </div>
 
+
     <!-- Available Courses -->
     <div id="registration" class="page-section" style="display:none;">
         <div class="page-header">
@@ -62,7 +92,7 @@
         </div>
         <div class="table-container">
             <table>
-                <tr><th>Code</th><th>Course</th><th>Credits</th><th>Day</th><th>Time</th><th>Venue</th><th>Seats</th><th>Action</th></tr>
+                <tr><th>Course Code</th><th>Course Title </th><th>Credit Hours</th><th>Day</th><th>Time</th><th>Location</th><th>Available Seats</th><th>Action</th></tr>
                 {% for c in courses %}
                 <tr>
                     <td><span class="badge badge-cyan">{{ c.course_code }}</span></td>
@@ -91,7 +121,7 @@
         </div>
         <div class="table-container">
             <table>
-                <tr><th>Code</th><th>Course</th><th>Credits</th><th>Day</th><th>Time</th><th>Venue</th><th>Action</th></tr>
+                <tr><th>Course Code</th><th>Course Title</th><th>Credit Hours</th><th>Day</th><th>Time</th><th>Location</th><th>Action</th></tr>
                 {% for m in my_courses %}
                 <tr>
                     <td><span class="badge badge-cyan">{{ m.course_code }}</span></td>
@@ -113,7 +143,7 @@
     <div id="timetable" class="page-section" style="display:none;">
         <div class="page-header">
             <h1 class="page-title"> My Schedule</h1>
-            <p class="page-subtitle">Weekly schedule of your enrolled courses.</p>
+            <p class="page-subtitle">Weekly schedule overview.</p>
         </div>
         <div class="timetable-grid">
             {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] %}
@@ -157,25 +187,62 @@
 
     <!-- Report -->
     <div id="report" class="page-section" style="display:none;">
+
         <div class="page-header">
             <h1 class="page-title"> Registration Report</h1>
-            <p class="page-subtitle">Official record of your enrolled courses.</p>
+            <p class="page-subtitle">Official academic record overview.</p>
         </div>
-        <div style="text-align:center; padding: 40px; color: var(--text-muted);">
-            <a href="{{ url_for('student_report') }}" class="btn-primary" style="padding: 12px 30px;">📄 View Full Report</a>
+
+        <!-- 📊 REPORT PREVIEW CARDS -->
+        <div class="grid">
+
+            <div class="card">
+                <h3>📚 Total Courses</h3>
+                <h2>{{ my_courses|length }}</h2>
+            </div>
+
+            <div class="card">
+                <h3>📖 Total Credits</h3>
+                <h2>{{ total_hours }}</h2>
+            </div>
+
+            <div class="card">
+                <h3>🎯 Max Credits</h3>
+                <h2>21</h2>
+            </div>
+
+            <div class="card">
+                <h3>📊 GPA (Future)</h3>
+                <h2 style="color: var(--text-muted);">--</h2>
+            </div>
+
         </div>
+
+        <!-- 📄 ACTION SECTION -->
+        <div style="text-align:center; margin-top: 30px;">
+
+            <p style="color: var(--text-muted); margin-bottom: 20px;">
+                Review your academic summary before generating the official report.
+            </p>
+
+            <a href="{{ url_for('student_report') }}"
+               class="btn-primary"
+               style="padding: 14px 30px; font-size: 16px;">
+                📄 Generate Official Report
+            </a>
+
+        </div>
+
     </div>
 
-</div>
-
-<script>
-    function showPage(pageId, element) {
-        document.querySelectorAll('.page-section').forEach(p => p.style.display = 'none');
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        document.getElementById(pageId).style.display = 'block';
-        element.classList.add('active');
-    }
-</script>
+    <script>
+        function showPage(pageId, element) {
+            document.querySelectorAll('.page-section').forEach(p => p.style.display = 'none');
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            document.getElementById(pageId).style.display = 'block';
+            element.classList.add('active');
+        }
+    </script>
 
 </body>
 </html>
