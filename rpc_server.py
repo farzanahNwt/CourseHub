@@ -10,8 +10,9 @@ def get_db():
     return mysql.connector.connect(
         host="localhost",
         user="root",
-        password="123456789",
-        database="coursehub_database"
+        password="",
+        database="coursehub_database",
+        port=3307
     )
 
 # ---------- Safe Converter ----------

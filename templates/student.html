@@ -31,9 +31,27 @@
         <div class="grid">
             <div class="card"><h3>📋 Enrolled</h3><h2>{{ my_courses|length }}</h2></div>
             <div class="card"><h3>📚 Available</h3><h2>{{ courses|length }}</h2></div>
-            <div class="card"><h3>📖 Credits</h3><h2>{{ total_hours }} <span style="font-size:16px; color:var(--text-muted);">CH</span></h2></div>
+            <div class="card"><h3>📖 Credits</h3><h2>{{ total_hours }}/21 <span style="font-size:16px; color:var(--text-muted);">CH</span></h2></div>
             <div class="card"><h3>🟢 Status</h3><h2 style="font-size:20px; -webkit-text-fill-color: var(--accent-green);">● Connected</h2></div>
         </div>
+
+        <!-- ⚠ CREDIT WARNING (FIXED POSITION) -->
+
+    {% if credit_warning %}
+    <div style="
+        margin-top: 15px;
+        padding: 12px;
+        border-radius: 8px;
+        background: rgba(255, 0, 0, 0.08);
+        border: 1px solid red;
+        color: red;
+        font-weight: bold;
+    ">
+        {{ credit_warning }}
+    </div>
+
+    {% endif %}
+
         <div class="table-container">
             <h3 style="padding: 20px 20px 0;">📋 Recent Registrations</h3>
             <table>

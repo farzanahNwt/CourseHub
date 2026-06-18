@@ -12,9 +12,11 @@ RPC_SERVER_URL = "http://localhost:8000/"
 # Database Configuration
 db_config = {
     'user': 'root',
-    'password': '123456789',
+    'password': '',
     'host': '127.0.0.1',
-    'database': 'coursehub_database'
+    'database': 'coursehub_database',
+    'port': 3307
+
 }
 
 def get_db_connection():
@@ -81,6 +83,7 @@ def login():
 # ---------- 2. Student Dashboard ----------
 @app.route('/student')
 def student_dashboard():
+    global credit_warning
     if 'user' not in session or session.get('role') != 'student':
         flash('Please login first.', 'warning')
         return redirect(url_for('login'))
@@ -124,12 +127,21 @@ def student_dashboard():
     # Calculate total hours safely
     total_hours = sum(safe_int(c.get('credit_hours', 0)) for c in my_courses)
 
+    max_credits = 21
+    remaining_credits = max_credits - total_hours
+    if total_hours > max_credits:
+        credit_warning = "Credit limit exceeded (Max 21 credits hour)"
+
+
     return render_template('student.html',
                            name=profile['name'] if profile else session['user'],
                            email=profile['email'] if profile else 'student@univ.edu',
                            courses=all_courses,
                            my_courses=my_courses,
-                           total_hours=total_hours)
+                           total_hours=total_hours,
+                           max_credits = max_credits,
+                           remaining_credits = remaining_credits,
+                           credit_warning = credit_warning)
 
 # ---------- 3. Register Course ----------
 @app.route('/register/<int:course_id>')
