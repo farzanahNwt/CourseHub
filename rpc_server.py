@@ -27,10 +27,16 @@ def safe(row):
 def get_courses():
     db = get_db()
     cur = db.cursor(dictionary=True)
-    cur.execute("SELECT * FROM courses ORDER BY course_code")
+    cur.execute("""
+                SELECT course_id, course_code, module_title, credits, day, start_time, end_time, venue, available_seats
+                FROM courses
+                ORDER BY course_code
+                """)
     data = [safe(row) for row in cur.fetchall()]
     cur.close()
     db.close()
+
+    print(f"📊 get_courses() returned {len(data)} courses")
     return data
 
 # ---------- 2. Get Student Courses ----------
@@ -38,7 +44,7 @@ def get_student_courses(student_id):
     db = get_db()
     cur = db.cursor(dictionary=True)
     cur.execute("""
-                SELECT c.*
+                SELECT c.course_id, c.course_code, c.module_title, c.credits, c.day, c.start_time, c.end_time, c.venue, c.available_seats
                 FROM courses c
                          JOIN registrations r ON c.course_id = r.course_id
                 WHERE r.student_id = %s
@@ -93,12 +99,14 @@ def add_course(code, title, seats, day, start, end, venue, hours):
     db = get_db()
     cur = db.cursor()
     cur.execute("""
-                INSERT INTO courses(course_code, course_title, available_seats, day, start_time, end_time, venue, credit_hours, lecturer)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'Dr. Staff')
+                INSERT INTO courses(course_code, module_title, available_seats, day, start_time, end_time, venue, credits)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 """, (code, title, seats, day, start, end, venue, hours))
     db.commit()
     cur.close()
     db.close()
+
+    print(f"✅ Course {code} added to database!")
     return "ADDED"
 
 # ---------- 6. Admin: Delete Course ----------
@@ -127,7 +135,7 @@ def get_course_registrations():
     db = get_db()
     cur = db.cursor(dictionary=True)
     cur.execute("""
-                SELECT c.course_code, c.course_title, s.name as student_name, s.username
+                SELECT c.course_code, c.module_title, s.name as student_name, s.username
                 FROM registrations r
                          JOIN courses c ON r.course_id = c.course_id
                          JOIN students s ON r.student_id = s.student_id
@@ -138,14 +146,14 @@ def get_course_registrations():
     db.close()
     return data
 
-# ---------- 9. Get Course Statistics ----------
+# ---------- 9. Get Course Stats ----------
 def get_course_stats():
     db = get_db()
     cur = db.cursor(dictionary=True)
     cur.execute("""
                 SELECT
                     c.course_code,
-                    c.course_title,
+                    c.module_title,
                     c.available_seats,
                     COUNT(r.student_id) as registered_count,
                     c.available_seats - COUNT(r.student_id) as seats_remaining
@@ -158,12 +166,12 @@ def get_course_stats():
     db.close()
     return data
 
-# ---------- 10. Get All Registrations by Student ----------
+# ---------- 10. Get Student Registrations ----------
 def get_student_registrations(student_id):
     db = get_db()
     cur = db.cursor(dictionary=True)
     cur.execute("""
-                SELECT c.course_code, c.course_title, c.day, c.start_time, c.end_time, c.venue
+                SELECT c.course_code, c.module_title, c.day, c.start_time, c.end_time, c.venue
                 FROM registrations r
                          JOIN courses c ON r.course_id = c.course_id
                 WHERE r.student_id = %s

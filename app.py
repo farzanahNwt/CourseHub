@@ -1,7 +1,10 @@
-from flask import Flask, render_template, request, redirect, session, url_for, flash
+from flask import Flask, render_template, request, redirect, session, url_for, flash, Response
 import xmlrpc.client
 import mysql.connector
 import hashlib
+from datetime import datetime
+import csv
+from io import StringIO
 
 app = Flask(__name__)
 app.secret_key = 'dcrs_secure_secret_key_2024_ultra_secure'
@@ -96,15 +99,15 @@ def student_dashboard():
             for c in all_courses:
                 if 'available_seats' in c:
                     c['available_seats'] = safe_int(c['available_seats'])
-                if 'credit_hours' in c:
-                    c['credit_hours'] = safe_int(c['credit_hours'])
+                if 'credits' in c:
+                    c['credits'] = safe_int(c['credits'])
 
             my_courses = rpc.get_student_courses(student_id)
             for c in my_courses:
                 if 'available_seats' in c:
                     c['available_seats'] = safe_int(c['available_seats'])
-                if 'credit_hours' in c:
-                    c['credit_hours'] = safe_int(c['credit_hours'])
+                if 'credits' in c:
+                    c['credits'] = safe_int(c['credits'])
         except Exception as e:
             flash(f'RPC Error: {e}', 'danger')
             all_courses = []
@@ -122,7 +125,7 @@ def student_dashboard():
     conn.close()
 
     # Calculate total hours safely
-    total_hours = sum(safe_int(c.get('credit_hours', 0)) for c in my_courses)
+    total_hours = sum(safe_int(c.get('credits', 0)) for c in my_courses)
 
     return render_template('student.html',
                            name=profile['name'] if profile else session['user'],
@@ -143,13 +146,13 @@ def register_course(course_id):
         try:
             result = rpc.register_course(session['id'], course_id)
             if result == "SUCCESS":
-                flash('✅ Course registered successfully!', 'success')
+                flash(' Course enrolled successfully!', 'success')
             elif result == "FULL":
                 flash('❌ No seats available for this course.', 'danger')
             elif result == "ALREADY":
-                flash('⚠️ You are already registered for this course.', 'warning')
+                flash('⚠️ You are already enrolled in this course.', 'warning')
             else:
-                flash(f'❌ Registration failed: {result}', 'danger')
+                flash(f'❌ Enrollment failed: {result}', 'danger')
         except Exception as e:
             flash(f'❌ RPC Error: {e}', 'danger')
     else:
@@ -169,7 +172,7 @@ def drop_course(course_id):
         try:
             result = rpc.drop_course(session['id'], course_id)
             if result == "DROPPED":
-                flash('✅ Course dropped successfully!', 'success')
+                flash(' Course withdrawn successfully!', 'success')
             else:
                 flash(f'⚠️ {result}', 'warning')
         except Exception as e:
@@ -194,8 +197,8 @@ def admin_dashboard():
             for c in all_courses:
                 if 'available_seats' in c:
                     c['available_seats'] = safe_int(c['available_seats'])
-                if 'credit_hours' in c:
-                    c['credit_hours'] = safe_int(c['credit_hours'])
+                if 'credits' in c:
+                    c['credits'] = safe_int(c['credits'])
 
             registrations = rpc.get_course_registrations()
             for r in registrations:
@@ -227,12 +230,16 @@ def admin_add_course():
     venue = request.form['venue']
     hours = safe_int(request.form['hours'])
 
+    print(f" Adding course: {code}, {title}, {seats}, {day}, {start}, {end}, {venue}, {hours}")
+
     rpc = get_rpc_proxy()
     if rpc:
         try:
-            rpc.add_course(code, title, seats, day, start, end, venue, hours)
-            flash(f'✅ Course {code} deployed successfully!', 'success')
+            result = rpc.add_course(code, title, seats, day, start, end, venue, hours)
+            print(f" RPC Result: {result}")
+            flash(f' Course {code} added successfully!', 'success')
         except Exception as e:
+            print(f"❌ RPC Error: {e}")
             flash(f'❌ RPC Error: {e}', 'danger')
     else:
         flash('❌ RPC Server unreachable.', 'danger')
@@ -250,7 +257,7 @@ def admin_delete_course(course_id):
     if rpc:
         try:
             rpc.delete_course(course_id)
-            flash('✅ Course purged successfully.', 'success')
+            flash(' Course deleted successfully.', 'success')
         except Exception as e:
             flash(f'❌ RPC Error: {e}', 'danger')
     else:
@@ -258,11 +265,69 @@ def admin_delete_course(course_id):
 
     return redirect(url_for('admin_dashboard'))
 
-# ---------- 8. Logout ----------
+# ---------- 8. Student Report ----------
+@app.route('/student/report')
+def student_report():
+    if 'user' not in session or session.get('role') != 'student':
+        flash('Please login first.', 'warning')
+        return redirect(url_for('login'))
+
+    student_id = session['id']
+
+    # Get student info
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT student_id, name, username, email FROM students WHERE student_id = %s", (student_id,))
+    student = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    # Get registered courses
+    rpc = get_rpc_proxy()
+    if rpc:
+        try:
+            my_courses = rpc.get_student_courses(student_id)
+            for c in my_courses:
+                c['credits'] = safe_int(c.get('credits', 0))
+        except Exception as e:
+            flash(f'RPC Error: {e}', 'danger')
+            my_courses = []
+    else:
+        my_courses = []
+
+    total_credits = sum(c.get('credits', 0) for c in my_courses)
+    total_courses = len(my_courses)
+    registration_date = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    # Export CSV
+    if request.args.get('format') == 'csv':
+        si = StringIO()
+        writer = csv.writer(si)
+        writer.writerow(['Course Code', 'Course Name', 'Credits', 'Day', 'Time', 'Status'])
+        for c in my_courses:
+            writer.writerow([
+                c.get('course_code', ''),
+                c.get('module_title', ''),
+                c.get('credits', 0),
+                c.get('day', ''),
+                f"{c.get('start_time', '')} - {c.get('end_time', '')}",
+                'Confirmed'
+            ])
+        output = si.getvalue()
+        return Response(output, mimetype='text/csv', headers={'Content-Disposition': 'attachment; filename=registration_report.csv'})
+
+    return render_template('student_report.html',
+                           student=student,
+                           courses=my_courses,
+                           total_credits=total_credits,
+                           total_courses=total_courses,
+                           registration_date=registration_date)
+
+# ---------- 9. Logout ----------
 @app.route('/logout')
 def logout():
     session.clear()
-    flash('You have been disconnected.', 'info')
+    flash('You have been logged out.', 'info')
     return redirect(url_for('login'))
 
 # ---------- Run ----------

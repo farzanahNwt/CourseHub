@@ -4,20 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <title>DCRS — Student Command Hub</title>
+    <title>DCRS — Student Dashboard</title>
 </head>
 <body>
 
 <div class="sidebar">
     <div class="sidebar-brand">🌌 <span>DCRS</span> Core</div>
     <div class="nav-menu">
-        <a href="#" class="nav-link active" onclick="showPage('dashboard', this)">📊 Dashboard Hub</a>
-        <a href="#" class="nav-link" onclick="showPage('registration', this)">📚 Course Catalog</a>
-        <a href="#" class="nav-link" onclick="showPage('my-courses', this)">📋 Enrolled Program</a>
-        <a href="#" class="nav-link" onclick="showPage('timetable', this)">📅 Schedule Matrix</a>
-        <a href="#" class="nav-link" onclick="showPage('profile', this)">👤 Secure Profile</a>
+        <a href="#" class="nav-link active" onclick="showPage('dashboard', this)"> Dashboard</a>
+        <a href="#" class="nav-link" onclick="showPage('registration', this)"> Available Courses</a>
+        <a href="#" class="nav-link" onclick="showPage('my-courses', this)"> My Courses</a>
+        <a href="#" class="nav-link" onclick="showPage('timetable', this)"> My Schedule</a>
+        <a href="#" class="nav-link" onclick="showPage('profile', this)"> Profile</a>
+        <a href="#" class="nav-link" onclick="showPage('report', this)"> Registration Report</a>
     </div>
-    <a href="/logout" class="btn-danger" style="text-align:center; margin-top:auto; padding:12px;">🚪 Disconnect</a>
+    <a href="/logout" class="btn-danger" style="text-align:center; margin-top:auto; padding:12px;"> Log Out</a>
 </div>
 
 <div class="main-content">
@@ -26,79 +27,83 @@
     <div id="dashboard" class="page-section">
         <div class="page-header">
             <h1 class="page-title">Welcome, {{ name }}</h1>
-            <p class="page-subtitle">Real-time telemetry — system status: <span style="color: var(--accent-green);">● Online</span></p>
+            <p class="page-subtitle">System Status: <span style="color: var(--accent-green);">● Online</span></p>
         </div>
         <div class="grid">
-            <div class="card"><h3>📋 Enrolled</h3><h2>{{ my_courses|length }}</h2></div>
-            <div class="card"><h3>📚 Available</h3><h2>{{ courses|length }}</h2></div>
-            <div class="card"><h3>📖 Credits</h3><h2>{{ total_hours }} <span style="font-size:16px; color:var(--text-muted);">CH</span></h2></div>
+            <div class="card"><h3> My Courses</h3><h2>{{ my_courses|length }}</h2></div>
+            <div class="card"><h3> Available</h3><h2>{{ courses|length }}</h2></div>
+            <div class="card"><h3> Total Credits</h3><h2>{{ total_hours }} <span style="font-size:16px; color:var(--text-muted);">CH</span></h2></div>
             <div class="card"><h3>🟢 Status</h3><h2 style="font-size:20px; -webkit-text-fill-color: var(--accent-green);">● Connected</h2></div>
         </div>
         <div class="table-container">
-            <h3 style="padding: 20px 20px 0;">📋 Recent Registrations</h3>
+            <h3 style="padding: 20px 20px 0;"> My Recent Courses</h3>
             <table>
-                <tr><th>Code</th><th>Module</th><th>Venue</th><th>Day</th><th>Time</th></tr>
+                <tr><th>Code</th><th>Course</th><th>Venue</th><th>Day</th><th>Time</th></tr>
                 {% for m in my_courses[:3] %}
                 <tr>
                     <td><span class="badge badge-cyan">{{ m.course_code }}</span></td>
-                    <td><b>{{ m.course_title }}</b></td>
+                    <td><b>{{ m.module_title }}</b></td>
                     <td><code>{{ m.venue }}</code></td>
                     <td><span class="badge badge-purple">{{ m.day }}</span></td>
                     <td>{{ m.start_time }} - {{ m.end_time }}</td>
                 </tr>
                 {% else %}
-                <tr><td colspan="5" style="text-align:center; color: var(--text-muted);">No registrations yet.</td></tr>
+                <tr><td colspan="5" style="text-align:center; color: var(--text-muted);">No courses enrolled yet.</td></tr>
                 {% endfor %}
             </table>
         </div>
     </div>
 
-    <!-- Course Catalog -->
+    <!-- Available Courses -->
     <div id="registration" class="page-section" style="display:none;">
         <div class="page-header">
-            <h1 class="page-title">📚 Course Catalog</h1>
-            <p class="page-subtitle">Browse available modules and inject them into your timeline.</p>
+            <h1 class="page-title"> Available Courses</h1>
+            <p class="page-subtitle">Browse available courses and enroll.</p>
         </div>
         <div class="table-container">
             <table>
-                <tr><th>Code</th><th>Module Title</th><th>Credits</th><th>Day</th><th>Time</th><th>Venue</th><th>Seats</th><th>Action</th></tr>
+                <tr><th>Code</th><th>Course</th><th>Credits</th><th>Day</th><th>Time</th><th>Venue</th><th>Seats</th><th>Action</th></tr>
                 {% for c in courses %}
                 <tr>
                     <td><span class="badge badge-cyan">{{ c.course_code }}</span></td>
-                    <td><b>{{ c.course_title }}</b></td>
-                    <td>{{ c.credit_hours }}</td>
+                    <td><b>{{ c.module_title }}</b></td>
+                    <td>{{ c.credits }}</td>
                     <td><span class="badge badge-purple">{{ c.day }}</span></td>
                     <td>{{ c.start_time }} - {{ c.end_time }}</td>
                     <td><code>{{ c.venue }}</code></td>
                     <td><b style="color: var(--accent-green);">{{ c.available_seats }}</b></td>
-                    <td><a href="/register/{{ c.course_id }}" class="btn-reg">⚡ Register</a></td>
+                    <td><a href="/register/{{ c.course_id }}" class="btn-reg"> Enroll</a></td>
                 </tr>
                 {% endfor %}
             </table>
+        </div>
+        <div style="display: flex; justify-content: flex-end; margin-top: 16px; gap: 10px;">
+            <a href="{{ url_for('student_report') }}" class="btn-primary" style="background: #a855f7; padding: 10px 24px;"> Generate Report</a>
+            <a href="{{ url_for('student_report') }}?format=csv" class="btn-primary" style="background: #10b981; padding: 10px 24px;"> Export CSV</a>
         </div>
     </div>
 
     <!-- My Courses -->
     <div id="my-courses" class="page-section" style="display:none;">
         <div class="page-header">
-            <h1 class="page-title">📋 Enrolled Program</h1>
-            <p class="page-subtitle">Active academic instances attached to your profile.</p>
+            <h1 class="page-title"> My Courses</h1>
+            <p class="page-subtitle">Courses you are currently enrolled in.</p>
         </div>
         <div class="table-container">
             <table>
-                <tr><th>Code</th><th>Module</th><th>Credits</th><th>Day</th><th>Time</th><th>Venue</th><th>Action</th></tr>
+                <tr><th>Code</th><th>Course</th><th>Credits</th><th>Day</th><th>Time</th><th>Venue</th><th>Action</th></tr>
                 {% for m in my_courses %}
                 <tr>
                     <td><span class="badge badge-cyan">{{ m.course_code }}</span></td>
-                    <td><b>{{ m.course_title }}</b></td>
-                    <td>{{ m.credit_hours }}</td>
+                    <td><b>{{ m.module_title }}</b></td>
+                    <td>{{ m.credits }}</td>
                     <td><span class="badge badge-purple">{{ m.day }}</span></td>
                     <td>{{ m.start_time }} - {{ m.end_time }}</td>
                     <td><code>{{ m.venue }}</code></td>
-                    <td><a href="/drop/{{ m.course_id }}" class="btn-drop">🗑️ Drop</a></td>
+                    <td><a href="/drop/{{ m.course_id }}" class="btn-drop">❌ Withdraw</a></td>
                 </tr>
                 {% else %}
-                <tr><td colspan="7" style="text-align:center; color: var(--text-muted);">You are not registered in any courses.</td></tr>
+                <tr><td colspan="7" style="text-align:center; color: var(--text-muted);">You are not enrolled in any courses.</td></tr>
                 {% endfor %}
             </table>
         </div>
@@ -107,8 +112,8 @@
     <!-- Timetable -->
     <div id="timetable" class="page-section" style="display:none;">
         <div class="page-header">
-            <h1 class="page-title">📅 Schedule Matrix</h1>
-            <p class="page-subtitle">Visual grid synchronized with core server.</p>
+            <h1 class="page-title"> My Schedule</h1>
+            <p class="page-subtitle">Weekly schedule of your enrolled courses.</p>
         </div>
         <div class="timetable-grid">
             {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] %}
@@ -117,7 +122,7 @@
                 {% for m in my_courses if m.day == day %}
                 <div class="time-slot">
                     <strong style="color:#fff; font-size:13px;">{{ m.start_time }} - {{ m.end_time }}</strong>
-                    <span style="color:var(--accent-cyan); font-weight:600; display:block; margin:6px 0; font-size:14px;">{{ m.course_title }}</span>
+                    <span style="color:var(--accent-cyan); font-weight:600; display:block; margin:6px 0; font-size:14px;">{{ m.module_title }}</span>
                     <small style="color:var(--text-muted);">📍 {{ m.venue }}</small>
                 </div>
                 {% else %}
@@ -131,8 +136,8 @@
     <!-- Profile -->
     <div id="profile" class="page-section" style="display:none;">
         <div class="page-header">
-            <h1 class="page-title">👤 Secure Profile</h1>
-            <p class="page-subtitle">Encrypted identity parameters.</p>
+            <h1 class="page-title"> My Profile</h1>
+            <p class="page-subtitle">Your personal information.</p>
         </div>
         <div class="table-container" style="max-width: 550px; margin: 0 auto;">
             <div style="text-align:center; padding: 30px 0;">
@@ -145,8 +150,19 @@
                 <div style="padding:12px 0; border-bottom:1px solid var(--border-glass);"><b>Name</b> <span style="float:right;">{{ name }}</span></div>
                 <div style="padding:12px 0; border-bottom:1px solid var(--border-glass);"><b>Email</b> <span style="float:right; color:var(--text-muted);">{{ email }}</span></div>
                 <div style="padding:12px 0; border-bottom:1px solid var(--border-glass);"><b>Faculty</b> <span style="float:right;">Computer Science & IT</span></div>
-                <div style="padding:12px 0;"><b>Credits</b> <span style="float:right;" class="badge badge-green">{{ total_hours }} CH</span></div>
+                <div style="padding:12px 0;"><b>Total Credits</b> <span style="float:right;" class="badge badge-green">{{ total_hours }} CH</span></div>
             </div>
+        </div>
+    </div>
+
+    <!-- Report -->
+    <div id="report" class="page-section" style="display:none;">
+        <div class="page-header">
+            <h1 class="page-title"> Registration Report</h1>
+            <p class="page-subtitle">Official record of your enrolled courses.</p>
+        </div>
+        <div style="text-align:center; padding: 40px; color: var(--text-muted);">
+            <a href="{{ url_for('student_report') }}" class="btn-primary" style="padding: 12px 30px;">📄 View Full Report</a>
         </div>
     </div>
 
