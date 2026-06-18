@@ -86,7 +86,7 @@ def login():
 # ---------- 2. Student Dashboard ----------
 @app.route('/student')
 def student_dashboard():
-    global credit_warning
+
     if 'user' not in session or session.get('role') != 'student':
         flash('Please login first.', 'warning')
         return redirect(url_for('login'))
@@ -132,6 +132,9 @@ def student_dashboard():
 
     max_credits = 21
     remaining_credits = max_credits - total_hours
+
+    credit_warning = None
+
     if total_hours > max_credits:
         credit_warning = "Credit limit exceeded (Max 21 credits hour)"
 
